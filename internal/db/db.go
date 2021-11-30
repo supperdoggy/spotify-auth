@@ -6,9 +6,12 @@ import (
 	globalStructs "github.com/supperdoggy/spotify-web-project/spotify-globalStructs"
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/night-codes/types.v1"
 	"sync"
 	"time"
 )
+
+type obj map[string]interface{}
 
 type tokenCache struct {
 	m map[string]globalStructs.Token
@@ -17,6 +20,9 @@ type tokenCache struct {
 
 type IDB interface {
 	NewToken(userID string) (string, error)
+	CheckToken(token string) (bool, string)
+	NewCreds(creds globalStructs.Creds) error
+	GetCredsByEmail(email string) (result globalStructs.Creds, err error)
 }
 
 type DB struct {
@@ -61,13 +67,30 @@ func (d *DB) NewToken(userID string) (string, error) {
 	return token, nil
 }
 
-
-func (d *DB) CheckToken(token string) bool {
+func (d *DB) CheckToken(token string) (bool, string) {
 	d.cache.mut.Lock()
 	v, ok := d.cache.m[token]
 	d.cache.mut.Unlock()
 	if !ok {
-		return false
+		return false, ""
 	}
-	return time.Now().After(v.Expire)
+
+	if time.Now().After(v.Expire) {
+		d.cache.mut.Lock()
+		delete(d.cache.m, token)
+		d.cache.mut.Unlock()
+
+		return false, ""
+	}
+	return true, v.UserID
+}
+
+func (d *DB) NewCreds(creds globalStructs.Creds) error {
+	creds.ID = types.String(time.Now().UnixNano())
+	return d.CredsCollection.Insert(creds)
+}
+
+func (d *DB) GetCredsByEmail(email string) (result globalStructs.Creds, err error) {
+	err = d.CredsCollection.Find(obj{"email": email}).One(&result)
+	return
 }
