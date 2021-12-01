@@ -9,6 +9,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/night-codes/types.v1"
 	"math/rand"
+	"net/mail"
+	"regexp"
 	"time"
 )
 
@@ -62,13 +64,17 @@ func (s *Service) CheckToken(req structs.CheckTokenReq) (resp structs.CheckToken
 }
 
 func (s *Service) Register(req structs.RegisterReq) (resp structs.RegisterResp, err error) {
+	// check email and password
 	if req.Email == "" || req.Password == "" {
 		resp.Error = "fill al the fields"
 		return resp, errors.New(resp.Error)
 	}
-
-	if len(req.Password) < 7 {
-		resp.Error = "password should be more than 7 chars"
+	if _, err := mail.ParseAddress(req.Email); err != nil {
+		resp.Error = "invalid email"
+		return resp, errors.New(resp.Error)
+	}
+	if ok, err := regexp.Match("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$", []byte(req.Password)); !ok || err != nil {
+		resp.Error = "Minimum eight characters, at least one letter and one number"
 		return resp, errors.New(resp.Error)
 	}
 
