@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/night-codes/types.v1"
+	"math/rand"
 	"time"
 )
 
@@ -78,8 +79,9 @@ func (s *Service) Register(req structs.RegisterReq) (resp structs.RegisterResp, 
 		return resp, err
 	}
 
+	rand.Seed(time.Now().UnixNano())
 	creds := globalStructs.Creds{
-		UserID: types.String(time.Now().UnixNano()),
+		UserID: types.String(rand.Int()),
 		Email: req.Email,
 		Username: req.Username,
 		Password: hashed,
@@ -117,8 +119,7 @@ func (s *Service) Login(req structs.LoginReq) (resp structs.LoginResp, err error
 		resp.Error = err.Error()
 		return resp, err
 	}
-
-	if err := bcrypt.CompareHashAndPassword(creds.Password, []byte(req.Password)); err == nil {
+	if err := bcrypt.CompareHashAndPassword(creds.Password, []byte(req.Password)); err != nil {
 		s.logger.Error("error comparing hash and password", zap.Error(err))
 		resp.Error = err.Error()
 		return resp, err

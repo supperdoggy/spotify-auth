@@ -2,9 +2,11 @@ package utils
 
 import (
 	"gopkg.in/night-codes/types.v1"
+	"math/rand"
 	"time"
 )
 
 func GenerateToken() string {
-	return types.String(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
+	return types.String(rand.Int())
 }

@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/night-codes/types.v1"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -86,7 +87,17 @@ func (d *DB) CheckToken(token string) (bool, string) {
 }
 
 func (d *DB) NewCreds(creds globalStructs.Creds) error {
-	creds.ID = types.String(time.Now().UnixNano())
+	// check if exists
+	var prev globalStructs.Creds
+	err := d.CredsCollection.Find(obj{"email": creds.Email}).One(&prev)
+	if err != nil && err != mgo.ErrNotFound {
+		return err
+	} else if err == nil {
+		return errors.New("email already exists")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	creds.ID = types.String(rand.Int())
 	return d.CredsCollection.Insert(creds)
 }
 
