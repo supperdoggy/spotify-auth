@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"github.com/supperdoggy/spotify-web-project/spotify-auth/internal/db"
+	"github.com/supperdoggy/spotify-web-project/spotify-auth/internal/utils"
 	"github.com/supperdoggy/spotify-web-project/spotify-auth/shared/structs"
 	globalStructs "github.com/supperdoggy/spotify-web-project/spotify-globalStructs"
 	"go.uber.org/zap"
@@ -10,7 +11,6 @@ import (
 	"gopkg.in/night-codes/types.v1"
 	"math/rand"
 	"net/mail"
-	"regexp"
 	"time"
 )
 
@@ -73,7 +73,7 @@ func (s *Service) Register(req structs.RegisterReq) (resp structs.RegisterResp, 
 		resp.Error = "invalid email"
 		return resp, errors.New(resp.Error)
 	}
-	if ok, err := regexp.Match("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$", []byte(req.Password)); !ok || err != nil {
+	if ok := utils.IsValid(req.Password); !ok {
 		resp.Error = "Minimum eight characters, at least one letter and one number"
 		return resp, errors.New(resp.Error)
 	}

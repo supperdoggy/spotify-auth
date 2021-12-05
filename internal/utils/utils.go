@@ -1,8 +1,29 @@
 package utils
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"unicode"
+)
 
-func CachePassword(password string) ([]byte, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return hashed, err
+// IsValid - checks password complexity
+func IsValid(s string) bool {
+	var (
+		hasMinLen  = false
+		hasUpper   = false
+		hasLower   = false
+		hasNumber  = false
+	)
+	if len(s) >= 7 {
+		hasMinLen = true
+	}
+	for _, char := range s {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		}
+	}
+	return hasMinLen && hasUpper && hasLower && hasNumber
 }
