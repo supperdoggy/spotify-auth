@@ -7,10 +7,10 @@ import (
 // IsValid - checks password complexity
 func IsValid(s string) bool {
 	var (
-		hasMinLen  = false
-		hasUpper   = false
-		hasLower   = false
-		hasNumber  = false
+		hasMinLen = false
+		hasUpper  = false
+		hasLower  = false
+		hasNumber = false
 	)
 	if len(s) >= 7 {
 		hasMinLen = true

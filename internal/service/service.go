@@ -11,6 +11,7 @@ import (
 	"gopkg.in/night-codes/types.v1"
 	"math/rand"
 	"net/mail"
+	"strings"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type IService interface {
 
 type Service struct {
 	logger *zap.Logger
-	db db.IDB
+	db     db.IDB
 }
 
 func NewService(l *zap.Logger, db db.IDB) IService {
@@ -73,6 +74,8 @@ func (s *Service) Register(req structs.RegisterReq) (resp structs.RegisterResp, 
 		resp.Error = "invalid email"
 		return resp, errors.New(resp.Error)
 	}
+	req.Email = strings.ToLower(req.Email)
+
 	if ok := utils.IsValid(req.Password); !ok {
 		resp.Error = "Minimum eight characters, at least one letter and one number"
 		return resp, errors.New(resp.Error)
@@ -87,8 +90,8 @@ func (s *Service) Register(req structs.RegisterReq) (resp structs.RegisterResp, 
 
 	rand.Seed(time.Now().UnixNano())
 	creds := globalStructs.Creds{
-		UserID: types.String(rand.Int()),
-		Email: req.Email,
+		UserID:   types.String(rand.Int()),
+		Email:    req.Email,
 		Username: req.Username,
 		Password: hashed,
 	}
@@ -118,6 +121,8 @@ func (s *Service) Login(req structs.LoginReq) (resp structs.LoginResp, err error
 		resp.Error = "you must fill all the fields"
 		return resp, errors.New(resp.Error)
 	}
+
+	req.Email = strings.ToLower(req.Email)
 
 	creds, err := s.db.GetCredsByEmail(req.Email)
 	if err != nil {

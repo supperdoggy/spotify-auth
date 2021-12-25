@@ -10,11 +10,11 @@ import (
 
 type Handlers struct {
 	logger *zap.Logger
-	s service.IService
+	s      service.IService
 }
 
 func NewHandlers(l *zap.Logger, s service.IService) Handlers {
-	return Handlers{logger: l, s:s}
+	return Handlers{logger: l, s: s}
 }
 
 func (h *Handlers) NewToken(c *gin.Context) {

@@ -15,7 +15,7 @@ import (
 type obj map[string]interface{}
 
 type tokenCache struct {
-	m map[string]globalStructs.Token
+	m   map[string]globalStructs.Token
 	mut sync.Mutex
 }
 
@@ -30,11 +30,13 @@ type DB struct {
 	Session *mgo.Session
 
 	CredsCollection *mgo.Collection
-	cache tokenCache
-	logger *zap.Logger
+	cache           tokenCache
+	logger          *zap.Logger
 }
 
 const ValidFor = 30
+
+var EmailAlredyExistErr = errors.New("email already exists")
 
 func NewDB(dbName string, logger *zap.Logger) (IDB, error) {
 	sess, err := mgo.Dial("")
@@ -45,7 +47,7 @@ func NewDB(dbName string, logger *zap.Logger) (IDB, error) {
 	return &DB{
 		Session:         sess,
 		CredsCollection: sess.DB(dbName).C("Creds"),
-		cache:           tokenCache{
+		cache: tokenCache{
 			m: map[string]globalStructs.Token{},
 		},
 		logger: logger,
@@ -62,7 +64,7 @@ func (d *DB) NewToken(userID string) (string, error) {
 		UserID:   userID,
 		TokenStr: token,
 		// valid for 30 days
-		Expire:   time.Now().Add(ValidFor*24*time.Hour),
+		Expire: time.Now().Add(ValidFor * 24 * time.Hour),
 	}
 	d.cache.mut.Unlock()
 	return token, nil
@@ -93,7 +95,7 @@ func (d *DB) NewCreds(creds globalStructs.Creds) error {
 	if err != nil && err != mgo.ErrNotFound {
 		return err
 	} else if err == nil {
-		return errors.New("email already exists")
+		return EmailAlredyExistErr
 	}
 
 	rand.Seed(time.Now().UnixNano())
